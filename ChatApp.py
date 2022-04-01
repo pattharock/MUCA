@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-# Student name and No.:
-# Development platform:
-# Python version:
-# Version:
+# Student name and No.: Ritvik Singh
+# Development platform: MacOS Montery 12.1 (Intel Chip)
+# Python version: Python 3.8.5
+# Version: 1.0 
 
 
 from tkinter import *
