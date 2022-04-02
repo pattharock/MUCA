@@ -32,6 +32,16 @@ HANDSHAKE = False
 ######### CLIENT IMPLEMENTATION ##########
 ##########################################
 
+
+######### SYNCHRONOUS LOGGERS ############
+# For printing success and failure       #
+# messages to the terminal as well as    #
+# console pane,                          #
+#                                        #
+# 1. connection_success()                #
+# 2. connection_error()                  #
+# 3. connection warning()                #
+##########################################
 def connection_success(conn, where, msg=""):
     if msg == "":
         return f"[CLIENT SUCCESS]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} has been established."
@@ -42,6 +52,31 @@ def connection_error(error, where):
 
 def connection_warning(conn, where):
     return f"[CLIENT WARNING]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
+
+
+########### HELPER FUCNTIONS ############
+# For encoding and decoding betweern    #
+# python dictinionary and ASCII         #
+# encoded strings                       #
+#                                       #
+# 1. encode()                           #
+# 2. decode()                           #
+#########################################
+
+def encode(data):
+    return json.dumps(data).encode("ascii")
+
+def decode(string):
+    return json.loads(string.decode("ascii"))
+
+########## CONNECTION FUNCTIONS ########
+# Establishing of TCP connection       #
+# and logical connections ie sending   #
+# JOIN command.                        #
+#                                      #
+# 1. start_client()                    #
+# 2. establish_connection()            #
+########################################
 
 def start_client():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
