@@ -13,6 +13,8 @@ import sys
 import socket
 import json
 import os
+import threading
+import time
 
 #
 # Global variables
@@ -22,7 +24,41 @@ USERID = None
 NICKNAME = None
 SERVER = None
 SERVER_PORT = None
+CLIENT_SOCKET = None
+CONNECTED = False
 
+
+##########################################
+######### CLIENT IMPLEMENTATION ##########
+##########################################
+
+def connection_success(conn):
+    return f"[CLIENT SUCCESS] : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} has been established."
+
+def connection_error(where, error):
+    return f"[CLIENT ERROR] in [{where}] : {error}"
+
+def connection_warning(conn):
+    return f"[CLIENT WARNING] : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
+
+def start_client():
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
+    if not CLIENT_SOCKET:
+        CLIENT_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if not CONNECTED:
+        try:
+            CLIENT_SOCKET.settimeout(2)
+            CLIENT_SOCKET.connect((SERVER, SERVER_PORT))
+        except socket.error as err:  
+            print(connection_error("socket.connect()", err))
+            console_print(connection_error("socket.connect()", err)) 
+        else:
+            CONNECTED = True
+            print(connection_success(CLIENT_SOCKET))
+            console_print(connection_success(CLIENT_SOCKET))
+    else:  
+        print(connection_warning(CLIENT_SOCKET))
+        console_print(connection_warning(CLIENT_SOCKET))
 
 
 #
@@ -30,15 +66,10 @@ SERVER_PORT = None
 #
 
 def do_Join():
-  #The following statement is just for demo purpose
-  #Remove it when you implement the function
-  console_print("Press do_Join()")
+  start_client()
 
 def do_Send():
-  #The following statements are just for demo purpose
-  #Remove them when you implement the function
   chat_print("Press do_Send()")
-  chat_print("Receive private message", "redmsg")
   chat_print("Receive group message", "greenmsg")
   chat_print("Receive broadcast message", "bluemsg")
 
@@ -46,7 +77,6 @@ def do_Leave():
   #The following statement is just for demo purpose
   #Remove it when you implement the function
   list_print("Press do_Leave()")
-
 
 #################################################################################
 #Do not make changes to the following code. They are for the UI                 #
@@ -90,7 +120,7 @@ def get_sendmsg():
 
 #for initializing the App
 def init():
-  global USERID, NICKNAME, SERVER, SERVER_PORT
+  global USERID, NICKNAME, SERVER, SERVER_PORT, CONNECTED
 
   #check if provided input argument
   if (len(sys.argv) > 2):

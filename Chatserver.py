@@ -10,12 +10,13 @@
 import socket
 import sys
 import select
+import time
 
 def main(argv):
     if len(argv) == 2:
         port = int(argv[1])
     else:
-        port = 32342
+        port = 40452
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
