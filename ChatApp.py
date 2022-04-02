@@ -26,20 +26,22 @@ SERVER = None
 SERVER_PORT = None
 CLIENT_SOCKET = None
 CONNECTED = False
-
+HANDSHAKE = False
 
 ##########################################
 ######### CLIENT IMPLEMENTATION ##########
 ##########################################
 
-def connection_success(conn):
-    return f"[CLIENT SUCCESS] : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} has been established."
+def connection_success(conn, where, msg=""):
+    if msg == "":
+        return f"[CLIENT SUCCESS]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} has been established."
+    else:
+        return f"[CLIENT SUCCESS] ({where}) : {msg}"
+def connection_error(error, where):
+    return f"[CLIENT ERROR]({where}) : {error}"
 
-def connection_error(where, error):
-    return f"[CLIENT ERROR] in [{where}] : {error}"
-
-def connection_warning(conn):
-    return f"[CLIENT WARNING] : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
+def connection_warning(conn, where):
+    return f"[CLIENT WARNING]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
 
 def start_client():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
@@ -50,16 +52,38 @@ def start_client():
             CLIENT_SOCKET.settimeout(2)
             CLIENT_SOCKET.connect((SERVER, SERVER_PORT))
         except socket.error as err:  
-            print(connection_error("socket.connect()", err))
-            console_print(connection_error("socket.connect()", err)) 
+            print(connection_error(err, "start_client()"))
+            console_print(connection_error(err, "start_client()")) 
         else:
             CONNECTED = True
-            print(connection_success(CLIENT_SOCKET))
-            console_print(connection_success(CLIENT_SOCKET))
+            print(connection_success(CLIENT_SOCKET, "start_client()"))
+            console_print(connection_success(CLIENT_SOCKET, "start_client()"))
+            establish_connection()
     else:  
-        print(connection_warning(CLIENT_SOCKET))
-        console_print(connection_warning(CLIENT_SOCKET))
+        print(connection_warning(CLIENT_SOCKET, "start_client()"))
+        console_print(connection_warning(CLIENT_SOCKET, "start_client()"))
 
+def establish_connection():
+    global CONNECTED, HANDSHAKE, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
+    if CONNECTED and (not HANDSHAKE):
+        message = {
+            "CMD": "JOIN",
+            "UN": NICKNAME,
+            "UID": USERID,
+        }
+        string = json.dumps(message)
+        try:  
+            CLIENT_SOCKET.send(string.encode("ascii"))
+        except socket.error as err: 
+            print(connection_error(err, "establsh_connection()"))
+            console_print(connection_error(err, "establsh_connection()"))
+        else:
+            HANDSHAKE = True 
+            print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} "))
+            console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} ")) 
+    else:
+        print(connection_error("Connection is broken", "establish_connection()"))
+        console_print(connection_error("Connection is broken", "establish_connection"))
 
 #
 # Functions to handle user input
