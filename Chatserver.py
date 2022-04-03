@@ -61,9 +61,7 @@ def handle_message(message_dict, SENDER_SOCKET):
                 "TYPE": "FAIL"
             }
             SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
-    print("HERE")
-    print(CLIENT_DICT)
-        
+            
 def start_server(argv):
     global SERVER_SOCKET, CONNECTED, SERVER_PORT, MLEN, CLIENT_DICT
     SERVER_PORT = int(argv[1]) if len(argv) == 2 else 40452

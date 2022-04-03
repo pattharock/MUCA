@@ -50,9 +50,11 @@ def connection_success(conn, where, msg=""):
 def connection_error(error, where):
     return f"[CLIENT ERROR]({where}) : {error}"
 
-def connection_warning(conn, where):
-    return f"[CLIENT WARNING]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
-
+def connection_warning(conn, where, msg = ""):
+    if msg == "":
+        return f"[CLIENT WARNING]({where}) : TCP Connection to {conn.getpeername()[0]}:{conn.getpeername()[1]} already exists"
+    else:
+        return f"[CLIENT WARNING]({where}) : {msg}"
 
 ########### HELPER FUCNTIONS ############
 # For encoding and decoding betweern    #
@@ -63,11 +65,15 @@ def connection_warning(conn, where):
 # 2. decode()                           #
 #########################################
 
-def encode(data):
-    return json.dumps(data).encode("ascii")
+#def encode(data):
+#   return json.dumps(data).encode("ascii")
+#
+#def decode(string):
+#    return json.loads(string.decode("ascii"))
 
-def decode(string):
-    return json.loads(string.decode("ascii"))
+
+
+
 
 ########## CONNECTION FUNCTIONS ########
 # Establishing of TCP connection       #
@@ -76,8 +82,42 @@ def decode(string):
 #                                      #
 # 1. start_client()                    #
 # 2. establish_connection()            #
+# 3. non_blocking_recv()               #
+# 4. handle_message()                  #
+#                                      #
+# NOTE: non_blockin_recv() will        #
+# experinece timeout by defintion      #
 ########################################
 
+def handle_message(data):
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN
+    CMD = data["CMD"]
+    if CMD == "ACK":
+        if data["TYPE"] == "OKAY": 
+            print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSKING COMPLETE - ACK RECEIVED"))
+            console_print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSKING COMPLETE - ACK RECEIVED"))
+        else:
+            print(connection_error("NACK received during hanshaking", "handle_message()"))
+            console_print(connection_error("NACK received during hanshaking", "handle_message()"))
+
+def non_blocking_recv():
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN
+    while CONNECTED:
+        try:
+            raw_message = CLIENT_SOCKET.recv(MLEN)
+        except socket.error as err: 
+            print(connection_warning(CLIENT_SOCKET, "non_blocking_recv()", "Receive experienced timeout"))
+        else:
+            if raw_message:
+                data = json.loads(raw_message.decode("ascii"))
+                handle_message(data)
+            else:
+                print(connection_error("Connection to server is broken", "non_blocking_recv()"))
+                console_print(connection_error("Connection to server is broken", "non_blocking_recv()"))
+    print("EXIT READER THREAD FOR THIS CLIENT")
+    console_print("EXIT READER THREAD FOR THIS CLIENT")
+
+            
 def start_client():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
     if not CLIENT_SOCKET:
@@ -91,6 +131,8 @@ def start_client():
             console_print(connection_error(err, "start_client()")) 
         else:
             CONNECTED = True
+            reader_thread = threading.Thread(target=non_blocking_recv)
+            reader_thread.start()
             print(connection_success(CLIENT_SOCKET, "start_client()"))
             console_print(connection_success(CLIENT_SOCKET, "start_client()"))
             establish_connection()
