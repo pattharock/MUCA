@@ -192,7 +192,7 @@ def send_message():
         to_string = get_tolist()
         to_field = []
         if message_string and to_string:
-            message_recepient_names = to_string.split(",")
+            message_recepient_names = to_string.split(", ")
             if len(message_recepient_names) == 1 and message_recepient_names[0] == "ALL":
                 if len(CLIENT_LIST) == 1:
                     print(connection_error("Can not send message to self. Try again", "send_message()"))
@@ -224,6 +224,7 @@ def send_message():
                 print(connection_error(err, "send_message()"))
                 console_print(connection_error(err, "send_message()"))
             else:
+                chat_print(f"[To: {to_string}] {message_string}")
                 print(connection_success(CLIENT_SOCKET, "send_message()", f"SENT MESSAGE : {json.dumps(raw_message)}" ))
                 console_print(connection_success(CLIENT_SOCKET, "send_message()", f"SENT MESSAGE : {json.dumps(raw_message)}" ))
         else:
