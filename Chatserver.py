@@ -44,9 +44,12 @@ def handle_message(message_dict, SENDER_SOCKET):
     CMD = message_dict['CMD']
     if CMD == "JOIN":
         clients_connected_uids = []
+        clients_connected_names = []
         for PORT in CLIENT_DICT:
             if "UID" in CLIENT_DICT[PORT]:
                 clients_connected_uids.append(CLIENT_DICT[PORT]["UID"])
+            if "UN" in CLIENT_DICT[PORT]:
+                clients_connected_names.append(CLIENT_DICT[PORT]["UN"])
         if message_dict['UID'] not in clients_connected_uids:
             to_send = {
                 "CMD":"ACK",
@@ -61,6 +64,28 @@ def handle_message(message_dict, SENDER_SOCKET):
                 "TYPE": "FAIL"
             }
             SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
+        list_message = {
+             "CMD": "LIST",
+            "DATA": [],
+        }
+        clients_connected_uids = []
+        clients_connected_names = []
+        for PORT in CLIENT_DICT:
+            if "UID" in CLIENT_DICT[PORT]:
+                clients_connected_uids.append(CLIENT_DICT[PORT]["UID"])
+            if "UN" in CLIENT_DICT[PORT]:
+                clients_connected_names.append(CLIENT_DICT[PORT]["UN"])
+
+        for i in range(len(clients_connected_uids)):
+            to_append = {
+                "UN": clients_connected_names[i],
+                "UID": clients_connected_uids[i],
+            }
+
+            list_message["DATA"].append(to_append)
+        for PORT in CLIENT_DICT:
+            PORT.send(json.dumps(list_message).encode("ascii"))
+            print(connection_success(conn=PORT, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
             
 def start_server(argv):
     global SERVER_SOCKET, CONNECTED, SERVER_PORT, MLEN, CLIENT_DICT

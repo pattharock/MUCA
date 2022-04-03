@@ -94,11 +94,21 @@ def handle_message(data):
     CMD = data["CMD"]
     if CMD == "ACK":
         if data["TYPE"] == "OKAY": 
-            print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSKING COMPLETE - ACK RECEIVED"))
-            console_print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSKING COMPLETE - ACK RECEIVED"))
+            print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
+            console_print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
         else:
             print(connection_error("NACK received during hanshaking", "handle_message()"))
             console_print(connection_error("NACK received during hanshaking", "handle_message()"))
+    elif CMD == "LIST":
+        peer_list = data['DATA']
+        peers = []
+        for peer in peer_list:
+            peers.append(peer['UN'] + " (" + peer["UID"] + ")")
+            peer_string = ", ".join(peers)
+        list_print(peer_string)
+        print(connection_success(CLIENT_SOCKET, "handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
+        console_print(connection_success(CLIENT_SOCKET,"handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
+        
 
 def non_blocking_recv():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN
