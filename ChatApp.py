@@ -27,6 +27,7 @@ SERVER_PORT = None
 CLIENT_SOCKET = None
 CONNECTED = False
 HANDSHAKE = False
+CLIENT_LIST = {}
 
 ##########################################
 ######### CLIENT IMPLEMENTATION ##########
@@ -90,7 +91,7 @@ def connection_warning(conn, where, msg = ""):
 ########################################
 
 def handle_message(data):
-    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN, CLIENT_LIST
     CMD = data["CMD"]
     if CMD == "ACK":
         if data["TYPE"] == "OKAY": 
@@ -105,6 +106,7 @@ def handle_message(data):
         for peer in peer_list:
             peers.append(peer['UN'] + " (" + peer["UID"] + ")")
             peer_string = ", ".join(peers)
+            CLIENT_LIST[peer["UN"]] = peer["UID"]
         list_print(peer_string)
         print(connection_success(CLIENT_SOCKET, "handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
         console_print(connection_success(CLIENT_SOCKET,"handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
@@ -112,21 +114,21 @@ def handle_message(data):
 
 def non_blocking_recv():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN
+    print(connection_success(CLIENT_SOCKET, "non_blocking_recv()", "Slave Thread Started")) 
+    console_print(connection_success(CLIENT_SOCKET, "non_blocking_recv()", "Slave Thread Started"))
     while CONNECTED:
         try:
             raw_message = CLIENT_SOCKET.recv(MLEN)
         except socket.error as err: 
-            print(connection_warning(CLIENT_SOCKET, "non_blocking_recv()", "Receive experienced timeout"))
+            print(". . . .")
         else:
             if raw_message:
-                data = json.loads(raw_message.decode("ascii"))
-                handle_message(data)
-            else:
+                handle_message(json.loads(raw_message.decode("ascii")))
+            else:                      
                 print(connection_error("Connection to server is broken", "non_blocking_recv()"))
                 console_print(connection_error("Connection to server is broken", "non_blocking_recv()"))
-    print("EXIT READER THREAD FOR THIS CLIENT")
-    console_print("EXIT READER THREAD FOR THIS CLIENT")
-
+                CONNECTED = False
+                
             
 def start_client():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
@@ -141,11 +143,13 @@ def start_client():
             console_print(connection_error(err, "start_client()")) 
         else:
             CONNECTED = True
+            establish_connection()
             reader_thread = threading.Thread(target=non_blocking_recv)
             reader_thread.start()
             print(connection_success(CLIENT_SOCKET, "start_client()"))
             console_print(connection_success(CLIENT_SOCKET, "start_client()"))
-            establish_connection()
+            #establish_connection()
+    
     else:  
         print(connection_warning(CLIENT_SOCKET, "start_client()"))
         console_print(connection_warning(CLIENT_SOCKET, "start_client()"))
@@ -165,12 +169,69 @@ def establish_connection():
             print(connection_error(err, "establsh_connection()"))
             console_print(connection_error(err, "establsh_connection()"))
         else:
-            HANDSHAKE = True 
-            print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} "))
-            console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} ")) 
+            ack_message = CLIENT_SOCKET.recv(MLEN)
+            ack = json.loads(ack_message.decode("ascii")) 
+            if ack["CMD"] == "ACK":
+                if ack["TYPE"] == "OKAY":
+                    HANDSHAKE = True 
+                    print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} "))
+                    console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} ")) 
+                elif ack["TYPE"] == "FAIL":
+                    print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
+                    console_print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
+                else:
+                    pass
     else:
         print(connection_error("Connection is broken", "establish_connection()"))
         console_print(connection_error("Connection is broken", "establish_connection"))
+
+def send_message():
+    global CONNECTED, HANDSHAKE, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, CLIENT_LIST
+    if CONNECTED and HANDSHAKE:
+        message_string = get_sendmsg()
+        to_string = get_tolist()
+        to_field = []
+        if message_string and to_string:
+            message_recepient_names = to_string.split(",")
+            if len(message_recepient_names) == 1 and message_recepient_names[0] == "ALL":
+                if len(CLIENT_LIST) == 1:
+                    print(connection_error("Can not send message to self. Try again", "send_message()"))
+                    console_print(connection_error("Can not send message to self. Try again", "send_message()"))
+                    return
+                else:
+                    to_field = []
+            else:
+                for name in message_recepient_names:
+                    if name == NICKNAME:
+                        print(connection_error("Can not send message to self. Try again", "send_message()"))
+                        console_print(connection_error("Can not send message to self, Try again", "send_message()"))
+                        return 
+                    elif name not in CLIENT_LIST:
+                        print(connection_error(f"'{name}' is not a valid recepient. Try again", "send_message()"))
+                        console_print(connection_error(f"'{name}' is not a valid recepient. Try again", "send_message()"))
+                        return
+                    else:
+                        to_field.append(CLIENT_LIST[name])
+            raw_message = {
+                "CMD": "SEND",
+                "MSG": message_string,
+                "TO": to_field,
+                "FROM": USERID,
+            }
+            try:
+                CLIENT_SOCKET.send(json.dumps(raw_message).encode("ascii"))
+            except socket.error as err:
+                print(connection_error(err, "send_message()"))
+                console_print(connection_error(err, "send_message()"))
+            else:
+                print(connection_success(CLIENT_SOCKET, "send_message()", f"SENT MESSAGE : {json.dumps(raw_message)}" ))
+                console_print(connection_success(CLIENT_SOCKET, "send_message()", f"SENT MESSAGE : {json.dumps(raw_message)}" ))
+        else:
+            print(connection_error("Please fill in TO: and MESSAGE", "send_message()"))
+            console_print(connection_error("Please fill in TO: and MESSAGE", "send_message()"))
+    else:
+        print(connection_error("Establish Connection to Server before sending message", "send_message()"))
+        console_print(connection_error("Establish Connection to Server before sending message", "send_message()"))
 
 #
 # Functions to handle user input
@@ -180,9 +241,7 @@ def do_Join():
   start_client()
 
 def do_Send():
-  chat_print("Press do_Send()")
-  chat_print("Receive group message", "greenmsg")
-  chat_print("Receive broadcast message", "bluemsg")
+  send_message()
 
 def do_Leave():
   #The following statement is just for demo purpose

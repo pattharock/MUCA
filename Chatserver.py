@@ -57,13 +57,13 @@ def handle_message(message_dict, SENDER_SOCKET):
             }
             CLIENT_DICT[SENDER_SOCKET]["UN"] = message_dict["UN"]
             CLIENT_DICT[SENDER_SOCKET]["UID"] = message_dict["UID"]
-            SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
+            SENDER_SOCKET.sendall(json.dumps(to_send).encode("ascii"))
         else:
             to_send = {
                 "CMD": "ACK",
                 "TYPE": "FAIL"
             }
-            SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
+            SENDER_SOCKET.sendall(json.dumps(to_send).encode("ascii"))
         list_message = {
              "CMD": "LIST",
             "DATA": [],
@@ -81,11 +81,12 @@ def handle_message(message_dict, SENDER_SOCKET):
                 "UN": clients_connected_names[i],
                 "UID": clients_connected_uids[i],
             }
-
             list_message["DATA"].append(to_append)
         for PORT in CLIENT_DICT:
-            PORT.send(json.dumps(list_message).encode("ascii"))
+            PORT.sendall(json.dumps(list_message).encode("ascii"))
             print(connection_success(conn=PORT, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
+    elif CMD == "SEND":
+        print("RECEIVED SEND: \n", json.dumps(message_dict))
             
 def start_server(argv):
     global SERVER_SOCKET, CONNECTED, SERVER_PORT, MLEN, CLIENT_DICT
@@ -136,7 +137,7 @@ def start_server(argv):
                                 CLIENT_LIST.remove(SOCKET)
                                 break
                 else:
-                    print(connection_warning(None, "main_loop", "Server Idle"))
+                    print(". . .")
 
 if __name__ == '__main__':
 	if len(sys.argv) > 2:
