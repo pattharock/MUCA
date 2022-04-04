@@ -57,34 +57,35 @@ def handle_message(message_dict, SENDER_SOCKET):
             }
             CLIENT_DICT[SENDER_SOCKET]["UN"] = message_dict["UN"]
             CLIENT_DICT[SENDER_SOCKET]["UID"] = message_dict["UID"]
-            SENDER_SOCKET.sendall(json.dumps(to_send).encode("ascii"))
+            SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
+            
+            list_message = {
+                "CMD": "LIST",
+                "DATA": []
+            }
+            clients_connected_uids = []
+            clients_connected_names = []
+            for SOCKET in CLIENT_DICT:
+                if "UID" in CLIENT_DICT[SOCKET]:
+                    clients_connected_uids.append(CLIENT_DICT[SOCKET]["UID"])
+                if "UN" in CLIENT_DICT[SOCKET]:
+                    clients_connected_names.append(CLIENT_DICT[SOCKET]["UN"])
+
+            for i in range(len(clients_connected_uids)):
+                to_append = {
+                    "UN": clients_connected_names[i],
+                    "UID": clients_connected_uids[i],
+                }
+                list_message["DATA"].append(to_append)
+            for SOCKET in CLIENT_DICT:
+                SOCKET.send(json.dumps(list_message).encode("ascii"))
+                print(connection_success(conn=SOCKET, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
         else:
             to_send = {
                 "CMD": "ACK",
                 "TYPE": "FAIL"
             }
-            SENDER_SOCKET.sendall(json.dumps(to_send).encode("ascii"))
-        list_message = {
-             "CMD": "LIST",
-            "DATA": [],
-        }
-        clients_connected_uids = []
-        clients_connected_names = []
-        for SOCKET in CLIENT_DICT:
-            if "UID" in CLIENT_DICT[SOCKET]:
-                clients_connected_uids.append(CLIENT_DICT[SOCKET]["UID"])
-            if "UN" in CLIENT_DICT[SOCKET]:
-                clients_connected_names.append(CLIENT_DICT[SOCKET]["UN"])
-
-        for i in range(len(clients_connected_uids)):
-            to_append = {
-                "UN": clients_connected_names[i],
-                "UID": clients_connected_uids[i],
-            }
-            list_message["DATA"].append(to_append)
-        for SOCKET in CLIENT_DICT:
-            SOCKET.send(json.dumps(list_message).encode("ascii"))
-            print(connection_success(conn=SOCKET, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
+            SENDER_SOCKET.send(json.dumps(to_send).encode("ascii"))
     elif CMD == "SEND":
         TYPE = ""
         recepients = message_dict["TO"]

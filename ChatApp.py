@@ -99,8 +99,8 @@ def handle_message(data):
             print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
             console_print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
         else:
-            print(connection_error("NACK received during hanshaking", "handle_message()"))
-            console_print(connection_error("NACK received during hanshaking", "handle_message()"))
+            print(connection_error("NACK received during duplicate hanshaking", "handle_message()"))
+            console_print(connection_error("NACK received during duplicate hanshaking", "handle_message()"))
     elif CMD == "LIST":
         peer_list = data['DATA']
         peers = []
@@ -170,6 +170,7 @@ def start_client():
     global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, HANDSHAKE
     if not CLIENT_SOCKET:
         CLIENT_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
     if not CONNECTED:
         try:
             CLIENT_SOCKET.settimeout(2)
@@ -177,34 +178,21 @@ def start_client():
         except socket.error as err:  
             print(connection_error(err, "start_client()"))
             console_print(connection_error(err, "start_client()")) 
-        else:
-            CONNECTED = True
-            establish_connection()
-            #ack_message = CLIENT_SOCKET.recv(MLEN)
-            #ack = json.loads(ack_message.decode("ascii")) 
-            #if ack["CMD"] == "ACK":
-            #    if ack["TYPE"] == "OKAY":
-            #        HANDSHAKE = True 
-            #        print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Receive ACK OK"))
-            #        console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Receive Ack OK")) 
-            #    elif ack["TYPE"] == "FAIL":
-            #        print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
-            #        console_print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
-            #    else:
-            #        pass
-            reader_thread = threading.Thread(target=non_blocking_recv)
-            reader_thread.start()
-            print(connection_success(CLIENT_SOCKET, "start_client()"))
-            console_print(connection_success(CLIENT_SOCKET, "start_client()"))
-            #establish_connection()
-    
-    else:  
+    if not CONNECTED:
+        CONNECTED = True
+        establish_connection()
+        reader_thread = threading.Thread(target=non_blocking_recv)
+        reader_thread.start()
+        print(connection_success(CLIENT_SOCKET, "start_client()"))
+        console_print(connection_success(CLIENT_SOCKET, "start_client()"))
+    else:
+        establish_connection()
         print(connection_warning(CLIENT_SOCKET, "start_client()"))
-        console_print(connection_warning(CLIENT_SOCKET, "start_client()"))
+        console_print(connection_warning(CLIENT_SOCKET, "start_client"))
 
 def establish_connection():
     global CONNECTED, HANDSHAKE, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
-    if CONNECTED and (not HANDSHAKE):
+    if CONNECTED:
         message = {
             "CMD": "JOIN",
             "UN": NICKNAME,
@@ -226,7 +214,9 @@ def send_message():
         message_string = get_sendmsg()
         to_string = get_tolist()
         to_field = []
-        if message_string and to_string:
+        print(message_string)
+        print(to_string)
+        if message_string.strip() and to_string.strip():
             message_recepient_names = to_string.split(", ")
             if len(message_recepient_names) == 1 and message_recepient_names[0] == "ALL":
                 if len(CLIENT_LIST) == 1:
