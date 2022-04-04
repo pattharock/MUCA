@@ -183,3 +183,7 @@ The server makes use of single threaded process with `select()` for __IO__.
   * Handle chat messages
     * Handle private, group, & broadcast messages
     * Correctly send the messages to target peer(s)  
+
+
+## NOTES
+1. If on starting up, you find that server socket already in use, you may try to wait for upto 1 minute before starting up again or aternatively use another socket, although that may require changing the SERVER_PORT in the config files.
