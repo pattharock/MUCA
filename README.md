@@ -1,6 +1,7 @@
 # Multi User Chat Application
 
 This repository contains a TCP implementation of a Multi-User Chat Application using Socket Programming in Python. 
+The link to the repository is [here](https://github.com/pattharock/MUCA.git)
 
 The files contained herein are:
   * `ChatApp.py` which starts a client instance for each client
