@@ -3,8 +3,7 @@
 
 # Student name and No.: Ritvik Singh
 # Development platform: MacOS Montery 12.1 (Intel Chip)
-# Python version: Python 3.8.5
-# Version: 1.0 
+# Python version: Python 3.8.5 
 
 
 import socket
@@ -34,7 +33,9 @@ def connection_warning(conn, where, msg=""):
         return f"[SERVER WARNING]({where}) : {msg}"
 
 ########### CONNECTION FUNCTIONS ###########
-# Starting and initialising the server.    #
+# Starting and initialising the server     #
+# 1. handle_message()                      #
+# 2. start_server()                        #
 #                                          #
 # NOTE: The server is set to non blocking  # 
 # mode.                                    # 

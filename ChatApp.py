@@ -3,9 +3,6 @@
 # Student name and No.: Ritvik Singh
 # Development platform: MacOS Montery 12.1 (Intel Chip)
 # Python version: Python 3.8.5
-# Version: 1.0 
-
-
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
@@ -57,25 +54,6 @@ def connection_warning(conn, where, msg = ""):
     else:
         return f"[CLIENT WARNING]({where}) : {msg}"
 
-########### HELPER FUCNTIONS ############
-# For encoding and decoding betweern    #
-# python dictinionary and ASCII         #
-# encoded strings                       #
-#                                       #
-# 1. encode()                           #
-# 2. decode()                           #
-#########################################
-
-#def encode(data):
-#   return json.dumps(data).encode("ascii")
-#
-#def decode(string):
-#    return json.loads(string.decode("ascii"))
-
-
-
-
-
 ########## CONNECTION FUNCTIONS ########
 # Establishing of TCP connection       #
 # and logical connections ie sending   #
@@ -84,7 +62,8 @@ def connection_warning(conn, where, msg = ""):
 # 1. start_client()                    #
 # 2. establish_connection()            #
 # 3. non_blocking_recv()               #
-# 4. handle_message()                  #
+# 4. handle_message()                  # 
+# 5. send_message()                    #
 #                                      #
 # NOTE: non_blockin_recv() will        #
 # experinece timeout by defintion      #
