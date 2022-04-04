@@ -222,8 +222,6 @@ def establish_connection():
 
 def send_message():
     global CONNECTED, HANDSHAKE, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, CLIENT_LIST
-    print(CONNECTED)
-    print(HANDSHAKE)
     if CONNECTED and HANDSHAKE:
         message_string = get_sendmsg()
         to_string = get_tolist()
@@ -284,8 +282,17 @@ def do_Send():
 def do_Leave():
   #The following statement is just for demo purpose
   #Remove it when you implement the function
-  list_print("Press do_Leave()")
-
+  #list_print("Press do_Leave()")
+  global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN, CLIENT_LIST, HANDSHAKE
+  if CONNECTED and HANDSHAKE:
+      CLIENT_SOCKET.close()
+      CLIENT_SOCKET = None
+      CONNECTED = False
+      HANDSHAKE = False
+      CLIENT_LIST = {}
+      print(connection_success(None, "do_Leave()", "Client has terminatad this TCP connection. To rejoin, click Join again. "))
+      console_print(connection_success(None, "do_Leave()", "Client has terminated this TCP connection. To rejoin, click Join agian."))
+      list_print("")
 #################################################################################
 #Do not make changes to the following code. They are for the UI                 #
 #################################################################################
@@ -344,7 +351,7 @@ def init():
     #open text file in read mode
     text_file = open(config_file, "r")
     #read whole file to a string
-    data = text_file.read()
+    data  = text_file.read()
     #close file
     text_file.close()
     #convert JSON string to Dictionary object

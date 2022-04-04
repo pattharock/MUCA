@@ -45,11 +45,11 @@ def handle_message(message_dict, SENDER_SOCKET):
     if CMD == "JOIN":
         clients_connected_uids = []
         clients_connected_names = []
-        for PORT in CLIENT_DICT:
-            if "UID" in CLIENT_DICT[PORT]:
-                clients_connected_uids.append(CLIENT_DICT[PORT]["UID"])
-            if "UN" in CLIENT_DICT[PORT]:
-                clients_connected_names.append(CLIENT_DICT[PORT]["UN"])
+        for SOCKET in CLIENT_DICT:
+            if "UID" in CLIENT_DICT[SOCKET]:
+                clients_connected_uids.append(CLIENT_DICT[SOCKET]["UID"])
+            if "UN" in CLIENT_DICT[SOCKET]:
+                clients_connected_names.append(CLIENT_DICT[SOCKET]["UN"])
         if message_dict['UID'] not in clients_connected_uids:
             to_send = {
                 "CMD":"ACK",
@@ -70,11 +70,11 @@ def handle_message(message_dict, SENDER_SOCKET):
         }
         clients_connected_uids = []
         clients_connected_names = []
-        for PORT in CLIENT_DICT:
-            if "UID" in CLIENT_DICT[PORT]:
-                clients_connected_uids.append(CLIENT_DICT[PORT]["UID"])
-            if "UN" in CLIENT_DICT[PORT]:
-                clients_connected_names.append(CLIENT_DICT[PORT]["UN"])
+        for SOCKET in CLIENT_DICT:
+            if "UID" in CLIENT_DICT[SOCKET]:
+                clients_connected_uids.append(CLIENT_DICT[SOCKET]["UID"])
+            if "UN" in CLIENT_DICT[SOCKET]:
+                clients_connected_names.append(CLIENT_DICT[SOCKET]["UN"])
 
         for i in range(len(clients_connected_uids)):
             to_append = {
@@ -82,14 +82,13 @@ def handle_message(message_dict, SENDER_SOCKET):
                 "UID": clients_connected_uids[i],
             }
             list_message["DATA"].append(to_append)
-        for PORT in CLIENT_DICT:
-            PORT.send(json.dumps(list_message).encode("ascii"))
-            print(connection_success(conn=PORT, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
+        for SOCKET in CLIENT_DICT:
+            SOCKET.send(json.dumps(list_message).encode("ascii"))
+            print(connection_success(conn=SOCKET, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
     elif CMD == "SEND":
         TYPE = ""
         recepients = message_dict["TO"]
         print(recepients)
-        
         if len(recepients) == 0:
             to_send = {
                 "CMD": "MSG",
@@ -173,6 +172,33 @@ def start_server(argv):
                                 print(connection_error(f"connection to {CLIENT_SOCKET.getpeername()[0]}:{CLIENT_SOCKET.getpeername()[1]} is broken.", "select()"))
                                 READ_LIST.remove(SOCKET)
                                 CLIENT_LIST.remove(SOCKET)
+                                print("Before")
+                                print(CLIENT_DICT)
+                                del CLIENT_DICT[SOCKET]
+                                print("After")
+                                print(CLIENT_DICT)
+                                
+                                list_message = {
+                                    "CMD": "LIST",
+                                    "DATA": []
+                                }
+                                clients_connected_uids = []
+                                clients_connected_names = []
+                                for SOCKET in CLIENT_DICT:
+                                    if "UID" in CLIENT_DICT[SOCKET]:
+                                        clients_connected_uids.append(CLIENT_DICT[SOCKET]["UID"])
+                                    if "UN" in CLIENT_DICT[SOCKET]:
+                                        clients_connected_names.append(CLIENT_DICT[SOCKET]["UN"])
+
+                                for i in range(len(clients_connected_uids)):
+                                    to_append = {
+                                        "UN": clients_connected_names[i],
+                                        "UID": clients_connected_uids[i],
+                                    }
+                                    list_message["DATA"].append(to_append)
+                                for SOCKET in CLIENT_DICT:
+                                    SOCKET.send(json.dumps(list_message).encode("ascii"))
+                                    print(connection_success(conn=SOCKET, where="main_server_loop()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
                                 break
                 else:
                     print(". . .")
