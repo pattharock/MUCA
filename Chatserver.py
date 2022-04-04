@@ -83,11 +83,49 @@ def handle_message(message_dict, SENDER_SOCKET):
             }
             list_message["DATA"].append(to_append)
         for PORT in CLIENT_DICT:
-            PORT.sendall(json.dumps(list_message).encode("ascii"))
+            PORT.send(json.dumps(list_message).encode("ascii"))
             print(connection_success(conn=PORT, where="handle_message()", msg="Broadcasting LIST to all : \n" + json.dumps(list_message)))
     elif CMD == "SEND":
-        print("RECEIVED SEND: \n", json.dumps(message_dict))
+        TYPE = ""
+        recepients = message_dict["TO"]
+        print(recepients)
+        
+        if len(recepients) == 0:
+            to_send = {
+                "CMD": "MSG",
+                "TYPE": "ALL",
+                "MSG": message_dict["MSG"],
+                "FROM": message_dict["FROM"]
+            }
+            for SOCKET in CLIENT_DICT:
+                if SOCKET != SENDER_SOCKET:
+                    SOCKET.send(json.dumps(to_send).encode("ascii"))
+        elif len(recepients) > 1:
+            to_send = {
+                "CMD": "MSG", 
+                "TYPE": "GROUP",
+                "MSG": message_dict["MSG"],
+                "FROM": message_dict["FROM"]
+            }
+            recepients = message_dict["TO"]
+            for uid in recepients:
+                for SOCKET in CLIENT_DICT:
+                    if "UID" in CLIENT_DICT[SOCKET] and CLIENT_DICT[SOCKET]['UID'] == uid:
+                        SOCKET.send(json.dumps(to_send).encode("ascii"))
+        else:
+            to_send = {
+                "CMD": "MSG",
+                "TYPE": "PRIVATE",
+                "MSG": message_dict["MSG"],
+                "FROM": message_dict["FROM"]
+            }
             
+            [uid] = message_dict["TO"]
+            for SOCKET in CLIENT_DICT:
+                if "UID" in CLIENT_DICT[SOCKET] and CLIENT_DICT[SOCKET]["UID"] == uid:
+                    SOCKET.send(json.dumps(to_send).encode("ascii"))
+
+
 def start_server(argv):
     global SERVER_SOCKET, CONNECTED, SERVER_PORT, MLEN, CLIENT_DICT
     SERVER_PORT = int(argv[1]) if len(argv) == 2 else 40452

@@ -91,10 +91,11 @@ def connection_warning(conn, where, msg = ""):
 ########################################
 
 def handle_message(data):
-    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN, CLIENT_LIST
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, MLEN, CLIENT_LIST, HANDSHAKE
     CMD = data["CMD"]
     if CMD == "ACK":
         if data["TYPE"] == "OKAY": 
+            HANDSHAKE = True
             print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
             console_print(connection_success(CLIENT_SOCKET, "handle_message()", "SUCCESS - HANDSHAKING COMPLETE - ACK RECEIVED"))
         else:
@@ -110,6 +111,26 @@ def handle_message(data):
         list_print(peer_string)
         print(connection_success(CLIENT_SOCKET, "handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
         console_print(connection_success(CLIENT_SOCKET,"handle_message()", f"LIST {json.dumps(data)} : PEER LIST UPDATED"))
+    elif CMD == "MSG":
+        print("CLIENT_HERE")
+        TYPE = data["TYPE"]
+        uid = data["FROM"]
+        message = data["MSG"]
+        display_name = ""
+        for nickname in CLIENT_LIST:
+            if CLIENT_LIST[nickname] == uid:
+                display_name = nickname
+                break
+        
+        message_display_string = f"[{display_name}] {message}"
+        if TYPE == "PRIVATE":
+            chat_print(message_display_string, 'redmsg')
+        elif TYPE == "GROUP":
+            chat_print(message_display_string, 'greenmsg')
+        else:
+            chat_print(message_display_string, 'bluemsg')
+
+        console_print("Received MSG " + json.dumps(data))
         
 
 def non_blocking_recv():
@@ -123,7 +144,22 @@ def non_blocking_recv():
             print(". . . .")
         else:
             if raw_message:
-                handle_message(json.loads(raw_message.decode("ascii")))
+                rm = raw_message.decode("ascii").split("}{")
+                print("No of messagees: ", len(rm))
+                messages = []
+                if len(rm) > 1:
+                    for i  in range(len(rm)):
+                        if i == 0:
+                            messages.append(rm[i] + "}")
+                        elif i == len(rm) - 1:
+                            messages.append("{" + rm[i])
+                        else:
+                            messages.append("{" + rm[i] + "}")
+                    for message in messages:
+                        handle_message(json.loads(message))
+                else:
+                    [message] = rm
+                    handle_message(json.loads(message))
             else:                      
                 print(connection_error("Connection to server is broken", "non_blocking_recv()"))
                 console_print(connection_error("Connection to server is broken", "non_blocking_recv()"))
@@ -131,7 +167,7 @@ def non_blocking_recv():
                 
             
 def start_client():
-    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT
+    global CONNECTED, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, HANDSHAKE
     if not CLIENT_SOCKET:
         CLIENT_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if not CONNECTED:
@@ -144,6 +180,18 @@ def start_client():
         else:
             CONNECTED = True
             establish_connection()
+            #ack_message = CLIENT_SOCKET.recv(MLEN)
+            #ack = json.loads(ack_message.decode("ascii")) 
+            #if ack["CMD"] == "ACK":
+            #    if ack["TYPE"] == "OKAY":
+            #        HANDSHAKE = True 
+            #        print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Receive ACK OK"))
+            #        console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Receive Ack OK")) 
+            #    elif ack["TYPE"] == "FAIL":
+            #        print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
+            #        console_print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
+            #    else:
+            #        pass
             reader_thread = threading.Thread(target=non_blocking_recv)
             reader_thread.start()
             print(connection_success(CLIENT_SOCKET, "start_client()"))
@@ -167,26 +215,15 @@ def establish_connection():
             CLIENT_SOCKET.send(string.encode("ascii"))
         except socket.error as err: 
             print(connection_error(err, "establsh_connection()"))
-            console_print(connection_error(err, "establsh_connection()"))
-        else:
-            ack_message = CLIENT_SOCKET.recv(MLEN)
-            ack = json.loads(ack_message.decode("ascii")) 
-            if ack["CMD"] == "ACK":
-                if ack["TYPE"] == "OKAY":
-                    HANDSHAKE = True 
-                    print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} "))
-                    console_print(connection_success(CLIENT_SOCKET, "establish_connection()", f"Sending JOIN : {string} ")) 
-                elif ack["TYPE"] == "FAIL":
-                    print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
-                    console_print(connection_error("FAIL ACK received. Try again", "establish_connection()"))
-                else:
-                    pass
+            console_print(connection_error(err, "establsh_connection()"))       
     else:
         print(connection_error("Connection is broken", "establish_connection()"))
         console_print(connection_error("Connection is broken", "establish_connection"))
 
 def send_message():
     global CONNECTED, HANDSHAKE, CLIENT_SOCKET, USERID, NICKNAME, SERVER, SERVER_PORT, CLIENT_LIST
+    print(CONNECTED)
+    print(HANDSHAKE)
     if CONNECTED and HANDSHAKE:
         message_string = get_sendmsg()
         to_string = get_tolist()
