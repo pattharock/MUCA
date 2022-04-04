@@ -194,3 +194,7 @@ The server makes use of single threaded process with `select()` for __IO__.
 ## Sample Outputs
 
 Below find the sample outputs on running the application on the software and python verison as mentioned in _documentation info_
+
+![Screenshot 1](./info/sc1.png?raw=true "Screenshot 1")
+
+![Screenshot 2](./info/sc2.png?raw=true "Screenshot 2")
