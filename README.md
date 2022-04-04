@@ -185,5 +185,11 @@ The server makes use of single threaded process with `select()` for __IO__.
     * Correctly send the messages to target peer(s)  
 
 
-## NOTES
+## Note
 1. If on starting up, you find that server socket already in use, you may try to wait for upto 1 minute before starting up again or aternatively use another socket, although that may require changing the SERVER_PORT in the config files.
+
+2. While specifying the recepients of the message, teh delimiter betwen nicknames is ", " and not "," so nicknames will take the form `name1, name2, name3` and not `name1,name2,name3`
+
+## Sample Outputs
+
+Below find the sample outputs on running the application on the software and python verison as mentioned in _documentation info_
