@@ -6,7 +6,7 @@ The link to the repository is [here](https://github.com/pattharock/MUCA.git)
 The files contained herein are:
   * `ChatApp.py` which starts a client instance for each client
   * `Chatserver.py` which starts the centralised server instance. 
-  * `config(1, 2, 3).txt` used for initialising cient state [SEE BELOW]
+  * `config(1, 2, 3).txt` used for initialising client state [SEE BELOW]
   * `start-OSX.sh` - a quick start script which initialises 4 client instances along with one server instance.
 
 ## Documentation Info
@@ -53,16 +53,16 @@ python3 ChatApp.py config1.txt
 
 ## Communication Protocol
 
-For this project, the communication protocol emplotyed is a JSON based toy protocol and consists of the followuing commands, all of which have been implemented. 
+For this project, the communication protocol employed is a JSON based toy protocol and consists of the following commands, all of which have been implemented. 
 
 #### `JOIN`
-* Send from client to server. upon clickingt the join button. 
+* Send from client to server. upon clicking the join button. 
 * Fields (mandatory)
   * "CMD": "JOIN"
   * "UN" : "Nickname of user"
   * "UID": "UID of user"
 * Establishes a TCP connection with the server and initiates the handshake process.
-* NOTE: Handshake here does not refer to the TCP Handshake, but the sending of join, followed by receipt of ACK.
+* NOTE: Handshake here does not refer to the TCP Handshake, but the sending of join, followed by receipt of ACK:OKAY.
 
 ```
 {
@@ -77,7 +77,7 @@ For this project, the communication protocol emplotyed is a JSON based toy proto
 * Fields (mandatory)
   * "CMD" : "ACK" 
   * "TYPE": "OKAY/FAIL"
-* Server sends OKAY/FAIL after acceptin/rejecting the `JOIN` request. 
+* Server sends OKAY/FAIL after accepting/rejecting the `JOIN` request. 
 
 ```
 {
@@ -150,7 +150,7 @@ Example usage
 ## Implementation Methodoloy
 
 ### Client
-The client makes use of multi-threading. The worker thread created is used for accpetpting the asynchronous `recv()` calls and the main thread is used for `send()` as well as the _Tkinter GUI_.
+The client makes use of multi-threading. The worker thread created is used for accepting the asynchronous `recv()` calls and the main thread is used for `send()` as well as the _Tkinter GUI_.
 
 ### Server
 The server makes use of single threaded process with `select()` for __IO__.
@@ -187,9 +187,9 @@ The server makes use of single threaded process with `select()` for __IO__.
 
 
 ## Note
-1. If on starting up, you find that server socket already in use, you may try to wait for upto 1 minute before starting up again or aternatively use another socket, although that may require changing the SERVER_PORT in the config files.
+1. If on starting up, you find that server port is already in use, you may try to wait for upto 1 minute before starting up again or aternatively use another port, although that may require changing the SERVER_PORT in the config files.
 
-2. While specifying the recepients of the message, teh delimiter betwen nicknames is ", " and not "," so nicknames will take the form `name1, name2, name3` and not `name1,name2,name3`
+2. While specifying the recepients of the message, the delimiter between nicknames is ", " and not "," so nicknames will take the form `name1, name2, name3` and not `name1,name2,name3`
 
 ## Sample Outputs
 
