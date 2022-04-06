@@ -172,7 +172,7 @@ The server makes use of single threaded process with `select()` for __IO__.
     * Allows the user to rejoin the Chatroom.
   *  Display peer list
     * Can display the updated peer list upon receiving the LIST command
-    * Display received chat messages (1.5 points)
+    * Display received chat messages
     * Can display those received messages with the correct display setting
 
 ### Server
