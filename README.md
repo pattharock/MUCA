@@ -23,7 +23,11 @@ To run on OSX, use the shell script `start-OSX.sh`
 sh start-OSX.sh
 ```
 
-Or if you prefer to start individually,
+Or if on windows use run the script `start.ps1`
+
+
+
+If you prefer to start individually,
  
  
 the __server__ can be started using `python3 Chatserver.py <optional_port_number>`. If no port number is given server will start at PORT 40452.
